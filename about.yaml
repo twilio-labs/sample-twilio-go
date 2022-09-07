@@ -1,0 +1,5 @@
+version: 1 
+type: admiral
+team: interfaces
+jira_project_id: DI 
+other_admiral_roles: [] 
