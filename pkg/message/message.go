@@ -1,6 +1,10 @@
 package message
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/twilio/twilio-go/twiml"
+)
 
 const (
 	// Static messages
@@ -26,32 +30,38 @@ const (
 	PARTICIPATION_THANKYOU = "We have received your review. Thank you for" +
 		" participating!"
 
+	REVIEW_CALL_GREETING     = `Ahoy! Greetings from Twilio Resorts and Spas.`
+	REVIEW_CALL_INSTRUCTIONS = `Thank you for participating in our review
+rewards program, where you will receive 50 Twilbucks by leaving a review of your
+recent stay! You may leave a review up to 1 minute long. Please leave your
+review after the beep.`
+
 	// Templates
 	GREETING_WITH_NAME_TEMPLATE = `Hello, %s!`
-
-	// TwiML templates
-	GREETING_SAY_TWIML_TEMPLATE = `
-	<Say>Ahoy! Greetings from Twilio Resorts and Spas.</Say>
-`
-	INSTRUCTIONS_SAY_TWIML = `
-	<Say>Thank you for participating in our review rewards program, where you
-will receive 50 Twilbucks by leaving a review of your recent stay! You may leave
-a review up to 1 minute long. Please leave your review after the beep.</Say>
-`
-	RECORD_VERB_TWIML = `
-	<Record timeout="10" maxLength="60" playBeep="true"></Record>	
-`
 )
 
 func GetHelloMessage(name string) string {
 	return fmt.Sprintf(GREETING_WITH_NAME_TEMPLATE, name)
 }
 
-func GetReviewGreetingAndInstructionsTwiML() string {
-	var twiml string = "<Response>"
-	twiml += GREETING_SAY_TWIML_TEMPLATE
-	twiml += INSTRUCTIONS_SAY_TWIML
-	twiml += RECORD_VERB_TWIML
-	twiml += "</Response>"
-	return twiml
+func GetReviewGreetingAndInstructionsTwiML() (string, error) {
+	sayGreeting := &twiml.VoiceSay{
+		Message: REVIEW_CALL_GREETING,
+		Voice:   "Polly.Salli-Neural",
+	}
+	sayInstructions := &twiml.VoiceSay{
+		Message: REVIEW_CALL_INSTRUCTIONS,
+		Voice:   "Polly.Salli-Neural",
+	}
+	record := &twiml.VoiceRecord{
+		Timeout:   "10",
+		MaxLength: "60",
+		PlayBeep:  "true",
+	}
+	twimlElements := []twiml.Element{sayGreeting, sayInstructions, record}
+	twiml, err := twiml.Voice(twimlElements)
+	if err != nil {
+		return "", err
+	}
+	return twiml, nil
 }

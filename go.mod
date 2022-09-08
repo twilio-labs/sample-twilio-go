@@ -4,11 +4,12 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.1
-	github.com/twilio/twilio-go v1.0.0-rc.6.0.20220811165237-663bacdfa1d4
+	github.com/twilio/twilio-go v1.0.0-rc.8
 	golang.org/x/text v0.3.7
 )
 
 require (
+	github.com/beevik/etree v1.1.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect

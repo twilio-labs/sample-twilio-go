@@ -16,9 +16,9 @@ Before installing and running this application, please ensure that you complete 
 - Save your Twilio account SID and Auth Token in the following environment variables:
     - TWILIO_ACCOUNT_SID
     - TWILIO_AUTH_TOKEN
+- Have [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart) installed and logged into your account to easily update your twilio phone number configuration with a single CLI command
 - Obtain access to the [Twilio Console](https://console.twilio.com/)
 - Install/obtain a localhost tunnel to access your localhost server on the internet. We'll use [ngrok](https://ngrok.com/) in our examples.
-- (**Optional**) Have [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart) installed and logged into your account to easily update your twilio phone number configuration with a single CLI command
 
 ## Build the application
 
@@ -38,9 +38,17 @@ Copy the `Forwarding` URL from ngrok's output. The URL should look something lik
 https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io
 ```
 
-Next, update your phone number's SMS webhook. You can either do this on your web browser in the Twilio Console, or using [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart). The following sections will walkthrough each method.
+Next, update your phone number's SMS webhook. You can do this using the [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart) command-line tool, or through the Twilio Console on your web browser. The following sections will walkthrough each method.
 
-To update your phone number's SMS webhook in the Twilio Console, open the Twilio Console [Phone Numbers tab](https://console.twilio.com/us1/develop/phone-numbers/manage/incoming), select your active phone number to open its Configurations page.
+To update your phone number's SMS webhook using the twilio-cli, just run the following CLI command in your terminal. Substitute `<phone_number>` with your Twilio phone number in [E.164](https://www.twilio.com/docs/glossary/what-e164) format, and `<forwarding_url>` with the forwarding URL from ngrok.
+
+```
+twilio phone-numbers:update <phone_number> \
+--sms-url=<forwarding_url>/sms \
+--sms-method=POST
+```
+
+**Alternatively**, you can configure your SMS webhook on the Twilio Console in your web browser. To do this, Open the Twilio Console [Phone Numbers tab](https://console.twilio.com/us1/develop/phone-numbers/manage/incoming), select your active phone number to open its Configurations page.
 
 Once in the Configure page, under the `Messaging Service` section, set the `A MESSAGE COMES IN` URL field to the following, substituting the `<forwarding_url>` portion for the forwarding URL copied from ngrok's output:
 
@@ -54,15 +62,7 @@ It should look something like this:
 https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io/sms
 ```
 
-Next, click the `Save` button below in the Console to apply your Twilio messaging webhook URL so that SMS messages are forwarded through ngrok to your application.
-
-**Alternatively**, if you have [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart) installed and setup for your account, you can run the following to configure your SMS webhook in a single CLI command. Just substitute `<phone_number>` with your Twilio phone number in [E.164](https://www.twilio.com/docs/glossary/what-e164) format, and `<forwarding_url>` with the forwarding URL from ngrok. 
-
-```
-twilio phone-numbers:update <phone_number> \
---sms-url=<forwarding_url>/sms \
---sms-method=POST
-```
+Next, click the `Save` button below in the Console to apply your Twilio messaging webhook URL.
 
 After configuring your SMS webhook, start the application with the following command, replacing `<phone_number>` with your Twilio phone number in E.164 format and `<forwarding_url>` with your ngrok forwarding URL:
 

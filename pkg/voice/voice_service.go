@@ -38,8 +38,14 @@ func (svc *VoiceService) InitiateReviewCall(to string) error {
 	params.SetStatusCallback(svc.config.BaseURL + svc.config.StatusCallbackPath)
 	params.SetStatusCallbackEvent([]string{"completed"})
 	params.SetStatusCallbackMethod(svc.config.StatusCallbackMethod)
-	params.SetTwiml(message.GetReviewGreetingAndInstructionsTwiML())
-	_, err := svc.client.Api.CreateCall(params)
+
+	twiml, err := message.GetReviewGreetingAndInstructionsTwiML()
+	if err != nil {
+		return fmt.Errorf("[InitiateReviewCall] Failed to generate call TwiML.\n Error: %w", err)
+	}
+	params.SetTwiml(twiml)
+
+	_, err = svc.client.Api.CreateCall(params)
 	if err != nil {
 		return fmt.Errorf("[InitiateReviewCall] Failed to create review call.\n Error: %w", err)
 	}
