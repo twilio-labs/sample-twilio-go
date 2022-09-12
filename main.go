@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	twilio "github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -24,6 +27,7 @@ func main() {
 	// Process CLI and env args
 	from := flag.String("from", "", "From phone number")
 	baseUrl := flag.String("url", "", "Server Base URL")
+	logLevel := flag.String("loglevel", "info", "Log level")
 	flag.Parse()
 
 	if *from == "" {
@@ -50,15 +54,21 @@ func main() {
 		StatusCallbackPath:   "/call-event",
 		StatusCallbackMethod: "POST",
 	}
-	smsSvc := sms.NewSMSService(client, config)
-	voiceSvc := voice.NewVoiceService(client, config)
+	logger, err := initializeLogger(*logLevel)
+	if err != nil {
+		log.Fatal("Failed to initialize logger. Error: ", err)
+	}
+	defer logger.Sync() // flushes buffer, if any
+	smsSvc := sms.NewSMSService(client, logger, config)
+	voiceSvc := voice.NewVoiceService(client, logger, config)
 	reqValidator := twilioClient.NewRequestValidator(authToken)
 
 	// Initialize application controller(s)
 	reviewCtr := controller.NewReviewController(smsSvc, voiceSvc, &reqValidator, config.BaseURL)
 
-	// Initialize Gin request routing and start Gin web server
 	r := gin.Default()
+
+	// Request roting
 	r.POST("/sms", reviewCtr.HandleSMS)
 	r.POST("/call-event", reviewCtr.HandleCallEvent)
 	r.GET("/call-total", func(c *gin.Context) {
@@ -69,5 +79,27 @@ func main() {
 		}
 		c.String(http.StatusOK, "Total Calls: %d", len(logs))
 	})
+	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
+}
+
+func initializeLogger(logLevel string) (*zap.Logger, error) {
+	cfg := zap.NewProductionConfig()
+	switch logLevel {
+	case "debug":
+		cfg.Level.SetLevel(zapcore.DebugLevel)
+	case "info":
+		cfg.Level.SetLevel(zapcore.InfoLevel)
+	case "warn":
+		cfg.Level.SetLevel(zapcore.WarnLevel)
+	case "error":
+		cfg.Level.SetLevel(zapcore.ErrorLevel)
+	case "panic":
+		cfg.Level.SetLevel(zapcore.PanicLevel)
+	case "fatal":
+		cfg.Level.SetLevel(zapcore.FatalLevel)
+	default:
+		return nil, fmt.Errorf("invalid log level argument")
+	}
+	return cfg.Build()
 }

@@ -6,7 +6,9 @@ import (
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
 	"github.com/twilio/twilio-go"
+	twilioClient "github.com/twilio/twilio-go/client"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
+	"go.uber.org/zap"
 )
 
 /*
@@ -14,14 +16,15 @@ import (
  */
 type SMSService struct {
 	client *twilio.RestClient
+	logger *zap.Logger
 	config *configuration.TwilioConfiguration
 }
 
 /*
  * Constructor
  */
-func NewSMSService(client *twilio.RestClient, config *configuration.TwilioConfiguration) *SMSService {
-	return &SMSService{client, config}
+func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration) *SMSService {
+	return &SMSService{client, logger, config}
 }
 
 func (svc *SMSService) SendGreeting(to string) error {
@@ -100,9 +103,26 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 	params.SetTo(to)
 	params.SetFrom(from)
 	params.SetBody(body)
+
+	// Logging the request parameters sent to the SDK client
+	svc.logger.Debug("SMS message parameters",
+		zap.String("To", *params.To),
+		zap.String("From", *params.From),
+		zap.String("Body", *params.Body))
+
 	_, err := svc.client.Api.CreateMessage(params)
+
+	// Debug logging errors returned from Twilio Messaging
 	if err != nil {
-		return fmt.Errorf("%s.\nError: %w", errMsg, err)
+		twilioError := err.(*twilioClient.TwilioRestError)
+		svc.logger.Error("Failed to send SMS message",
+			zap.Int("code", twilioError.Code),
+			zap.String("message", twilioError.Message),
+			zap.Int("status", twilioError.Status),
+			zap.String("moreInfo", twilioError.MoreInfo),
+			zap.Any("details", twilioError.Details))
+
+		return fmt.Errorf("%s. Error: %w", errMsg, err)
 	}
 	return nil
 }

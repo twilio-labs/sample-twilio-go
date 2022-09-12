@@ -84,6 +84,19 @@ After leaving a review, you may playback your review recording in the Twilio Con
 
 To view the total number of completed calls made by your application (and phone number), navigate to the http://localhost:8080/call-total page.
 
+## Further Configuration
+
+The application uses [Zap](https://github.com/uber-go/zap) for structured, leveled logging. To configure the application's log level, set the `-loglevel` CLI option flag when starting the app to one of the following values (i.e. `-loglevel=debug`)
+
+|Value|Description|
+|---|---|
+|debug|Debug level logs (lowest level logs)|
+|info|Info level logs (default)|
+|warn|Warn level logs|
+|error|Error level logs|
+|panic|Panic level logs|
+|fatal|Fatal level logs (highest level logs)|
+
 ## Getting help
 
 For any questions or assistance regarding this application or the Twilio Go SDK, please feel free to reach out to us at our [#help-dev-interfaces](https://twilio.slack.com/archives/CGQPL0RPH) Slack channel.

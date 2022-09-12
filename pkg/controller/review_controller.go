@@ -60,8 +60,11 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 
 	if greeted == "false" {
 		// Send greeting and participation invite
-		ctr.smsSvc.SendGreeting(incomingPhoneNumber)
-		ctr.smsSvc.SendInvite(incomingPhoneNumber)
+		err = ctr.sendGreetingAndInvite(incomingPhoneNumber)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 		c.SetCookie("greeted", "true", COOKIE_TTL, "/sms", "localhost", false, false)
 		c.AbortWithStatus(http.StatusOK)
 		return
@@ -69,8 +72,12 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 
 	if participant == "false" {
 		// Participation invite declined
-		ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
 		resetContext(c)
+		err = ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 		c.AbortWithStatus(http.StatusOK)
 		return
 	}
@@ -79,40 +86,54 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 		if strings.ToLower(incomingBody) == "yes" {
 			// Participation invite accepted. Query for participant name.
 			c.SetCookie("participant", "true", COOKIE_TTL, "/sms", "localhost", false, false)
-			ctr.smsSvc.SendAcceptConfirmation(incomingPhoneNumber)
-			ctr.smsSvc.SendAskForName(incomingPhoneNumber)
+			err = ctr.sendInviteComfirmationAndAskForName(incomingPhoneNumber)
+			if err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
 			c.AbortWithStatus(http.StatusOK)
 			return
 		} else if strings.ToLower(incomingBody) == "no" {
 			// Participation invite declined.
-			c.SetCookie("participant", "false", COOKIE_TTL, "/sms", "localhost", false, false)
-			ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
 			resetContext(c)
+			err = ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
+			if err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
 			c.AbortWithStatus(http.StatusOK)
 			return
 		} else {
 			// Unknown input. Send fallback message.
-			ctr.smsSvc.SendInviteFallback(incomingPhoneNumber)
+			err = ctr.smsSvc.SendInviteFallback(incomingPhoneNumber)
+			if err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
 			c.AbortWithStatus(http.StatusOK)
 			return
 		}
 	}
 
 	if participant == "true" && len(incomingBody) > 0 {
-		// Invite acccepted. Name query
-		caser := cases.Title(language.AmericanEnglish)
-		ctr.smsSvc.SendNamedGreeting(incomingPhoneNumber, caser.String(incomingBody))
-		ctr.smsSvc.SendCallNotification(incomingPhoneNumber)
-		time.Sleep(time.Duration(WAIT_SECONDS_UNTIL_CALL) * time.Second)
-		ctr.voiceSvc.InitiateReviewCall(incomingPhoneNumber)
+		// Invite acccepted
 		resetContext(c)
+		caser := cases.Title(language.AmericanEnglish)
+		err := ctr.sendNamedGreetingAndInitiateCall(caser.String(incomingBody), incomingPhoneNumber)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 		c.AbortWithStatus(http.StatusOK)
 		return
 	} else {
 		// Send name query fallback message
-		ctr.smsSvc.SendAskForNameFallback(incomingPhoneNumber)
+		err = ctr.smsSvc.SendAskForNameFallback(incomingPhoneNumber)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 		c.AbortWithStatus(http.StatusOK)
-		return
 	}
 }
 
@@ -141,6 +162,40 @@ func (ctr *ReviewController) isValidRequest(c *gin.Context) bool {
 		return ctr.reqValidator.Validate(url, params, signatureHeader[0])
 	}
 	return false
+}
+
+func (ctr *ReviewController) sendGreetingAndInvite(to string) error {
+	if err := ctr.smsSvc.SendGreeting(to); err != nil {
+		return err
+	}
+	if err := ctr.smsSvc.SendInvite(to); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ctr *ReviewController) sendInviteComfirmationAndAskForName(to string) error {
+	if err := ctr.smsSvc.SendAcceptConfirmation(to); err != nil {
+		return err
+	}
+	if err := ctr.smsSvc.SendAskForName(to); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ctr *ReviewController) sendNamedGreetingAndInitiateCall(name, to string) error {
+	if err := ctr.smsSvc.SendNamedGreeting(to, name); err != nil {
+		return err
+	}
+	if err := ctr.smsSvc.SendCallNotification(to); err != nil {
+		return err
+	}
+	time.Sleep(time.Duration(WAIT_SECONDS_UNTIL_CALL) * time.Second)
+	if err := ctr.voiceSvc.InitiateReviewCall(to); err != nil {
+		return err
+	}
+	return nil
 }
 
 func resetContext(c *gin.Context) {
