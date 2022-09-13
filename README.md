@@ -102,3 +102,37 @@ The application uses [Zap](https://github.com/uber-go/zap) for structured, level
 For any questions or assistance regarding this application or the Twilio Go SDK, please feel free to reach out to us at our [#help-dev-interfaces](https://twilio.slack.com/archives/CGQPL0RPH) Slack channel.
 
 For Twilio Go SDK documentation, examples, and code snippets, please refer to the documentation on [pkg.go.dev/github.com/twilio/twilio-go](https://pkg.go.dev/github.com/twilio/twilio-go).
+
+## Appendix
+
+### Code Areas of Interest
+
+Areas of interest in the code base that serve as examples for using the Twilio SDK and troubleshooting errors.
+
+- Initializing the Twilio SDK client. A pointer to this client instance is then saved in each application's service `client` field for later use (i.e. [SMSService.client](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L27))
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L44
+
+- Sending an SMS message with the SDK
+    
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L102
+
+- Initiating a voice call with the SDK
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/voice/voice_service.go#L38
+
+- Generating TwiML using the SDK
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/message/message.go#L48
+
+- Initializing the SDK Request Validator. A pointer to this request validator instance is then saved in the application controller `reqValidator` field for later use (i.e. [ReviewController.reqValidator](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L35))
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L64
+
+- Using the Request Validator to validate requests are coming from Twilio
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L153
+
+- Debugging errors returned in an API response while using the SDK
+
+    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L117

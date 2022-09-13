@@ -68,7 +68,7 @@ func main() {
 
 	r := gin.Default()
 
-	// Request roting
+	// Request routing
 	r.POST("/sms", reviewCtr.HandleSMS)
 	r.POST("/call-event", reviewCtr.HandleCallEvent)
 	r.GET("/call-total", func(c *gin.Context) {

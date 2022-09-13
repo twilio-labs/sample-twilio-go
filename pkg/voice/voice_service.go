@@ -7,7 +7,7 @@ import (
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
 	"github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
-	openapi "github.com/twilio/twilio-go/rest/api/v2010"
+	twilioAPI "github.com/twilio/twilio-go/rest/api/v2010"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +35,7 @@ func NewVoiceService(client *twilio.RestClient, logger *zap.Logger, config *conf
 }
 
 func (svc *VoiceService) InitiateReviewCall(to string) error {
-	params := &openapi.CreateCallParams{}
+	params := &twilioAPI.CreateCallParams{}
 	params.SetTo(to)
 	params.SetFrom(svc.config.AccountPhoneNumber)
 	params.SetStatusCallback(svc.config.BaseURL + svc.config.StatusCallbackPath)
@@ -60,7 +60,7 @@ func (svc *VoiceService) InitiateReviewCall(to string) error {
 
 func (svc *VoiceService) RetrieveCallLogs() ([]*ReviewCallRecord, error) {
 	var logs []*ReviewCallRecord
-	params := &openapi.ListCallParams{}
+	params := &twilioAPI.ListCallParams{}
 	records, err := svc.client.Api.ListCall(params)
 	if err != nil {
 		svc.logTwilioError("Failed to retrieve call logs", err)
@@ -88,7 +88,7 @@ func (svc *VoiceService) logTwilioError(msg string, err error) {
 		zap.Any("details", twilioError.Details))
 }
 
-func (svc *VoiceService) logCallParams(params *openapi.CreateCallParams) {
+func (svc *VoiceService) logCallParams(params *twilioAPI.CreateCallParams) {
 	svc.logger.Debug("Voice call parameters",
 		zap.String("To", *params.To),
 		zap.String("From", *params.From),

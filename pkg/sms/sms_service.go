@@ -7,7 +7,7 @@ import (
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
 	"github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
-	openapi "github.com/twilio/twilio-go/rest/api/v2010"
+	twilioAPI "github.com/twilio/twilio-go/rest/api/v2010"
 	"go.uber.org/zap"
 )
 
@@ -99,7 +99,7 @@ func (svc *SMSService) SendGoodbye(to string) error {
 }
 
 func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
-	params := &openapi.CreateMessageParams{}
+	params := &twilioAPI.CreateMessageParams{}
 	params.SetTo(to)
 	params.SetFrom(from)
 	params.SetBody(body)
