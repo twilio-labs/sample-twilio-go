@@ -63,6 +63,17 @@ func init() {
 }
 
 func main() {
+	// Setup Tracer
+	ctx := context.Background()
+	tp, err := initTracer(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
 
 	// Process CLI and env args
 	from := os.Getenv(PHONE_NUMBER_ENV)
