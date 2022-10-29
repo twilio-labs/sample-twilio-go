@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +17,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	twilio "github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -38,10 +45,17 @@ var latency = prometheus.NewSummaryVec(
 	[]string{"method", "path"},
 )
 
+var tracer = otel.GetTracerProvider().Tracer("twilio-go-at-scale")
+
 func prometheusGinMiddleware(c *gin.Context) {
 	start := time.Now()
 	c.Next()
 	latency.WithLabelValues(c.Request.Method, c.Request.URL.Path).Observe(time.Since(start).Seconds())
+
+	// tracer
+	ctx, span := tracer.Start(c.Request.Context(), "prometheusGinMiddleware")
+	defer span.End()
+	c.Request = c.Request.WithContext(ctx)
 }
 
 func init() {
@@ -49,6 +63,7 @@ func init() {
 }
 
 func main() {
+
 	// Process CLI and env args
 	from := os.Getenv(PHONE_NUMBER_ENV)
 	baseUrl := os.Getenv(BASE_URL_ENV)
@@ -110,6 +125,40 @@ func main() {
 	})
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
+}
+
+
+func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
+	// export traces to Zap logger
+	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+	if err != nil {
+		return nil, err
+	}
+	
+	// Identify your application using resource detection
+	res, err := resource.New(ctx,
+		// Use the GCP resource detector to detect information about the GCP platform
+		//resource.WithDetectors(gcp.NewDetector()),
+		// Keep the default detectors
+		resource.WithTelemetrySDK(),
+		// Add your own custom attributes to identify your application
+		resource.WithAttributes(
+				semconv.ServiceNameKey.String("my-application"),
+		),
+	)
+	if err != nil {
+		log.Fatalf("resource.New: %v", err)
+	}
+
+	//
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	defer tp.ForceFlush(ctx) // flushes any pending spans
+	otel.SetTracerProvider(tp)
+	return tp, nil
 }
 
 func initializeLogger(logLevel string) (*zap.Logger, error) {
