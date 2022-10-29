@@ -94,6 +94,9 @@ func main() {
 	r.Use(prometheusGinMiddleware)
 
 	// Request routing
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
+	})
 	r.POST("/sms", reviewCtr.HandleSMS)
 	r.POST("/call-event", reviewCtr.HandleCallEvent)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
