@@ -7,6 +7,10 @@ GOTAGS ?=
 GOPKGS ?= $(shell go list $(FILES) | grep -v /vendor/)
 GOFILES ?= $(shell find . -name '*.go' | grep -v /vendor/)
 
+## dev
+dev: ## Run the app in dev mode
+	@go run cmd/app/main.go -dev
+
 ## Build:
 build-app: ## Build your project and put the output binary in out/bin/
 	mkdir -p out/bin
