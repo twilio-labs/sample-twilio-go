@@ -25,15 +25,15 @@ func TestNewReviewController(t *testing.T) {
 }
 
 func GetTestGinContext() *gin.Context {
-    gin.SetMode(gin.TestMode)
+	gin.SetMode(gin.TestMode)
 
-    w := httptest.NewRecorder()
-    ctx, _ := gin.CreateTestContext(w)
-    ctx.Request = &http.Request{
-      Header: make(http.Header),
-    }
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = &http.Request{
+		Header: make(http.Header),
+	}
 
-    return ctx
+	return ctx
 }
 
 func TestReviewController_HandleSMS(t *testing.T) {
@@ -75,7 +75,7 @@ func TestReviewController_isValidRequest(t *testing.T) {
 	// Arrange
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
-	
+
 	clientRequestValidator := &twilioClient.RequestValidator{}
 	ctr := NewReviewController(sms, voice, clientRequestValidator, "http://localhost")
 

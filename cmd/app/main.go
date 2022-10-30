@@ -138,14 +138,13 @@ func main() {
 	r.Run()
 }
 
-
 func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	// export traces to Zap logger
 	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Identify your application using resource detection
 	res, err := resource.New(ctx,
 		// Use the GCP resource detector to detect information about the GCP platform
@@ -154,7 +153,7 @@ func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 		resource.WithTelemetrySDK(),
 		// Add your own custom attributes to identify your application
 		resource.WithAttributes(
-				semconv.ServiceNameKey.String("my-application"),
+			semconv.ServiceNameKey.String("my-application"),
 		),
 	)
 	if err != nil {

@@ -12,8 +12,18 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/vcs v1.13.3 // indirect
+	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/golang/dep v0.5.4 // indirect
+	github.com/jmank88/nuts v0.4.0 // indirect
+	github.com/nightlyone/lockfile v1.0.0 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -51,7 +61,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20220824171710-5757bc0c5503 // indirect
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

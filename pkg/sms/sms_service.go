@@ -17,16 +17,16 @@ import (
  * Service for handling SMS communication
  */
 type SMSService struct {
-	client *twilio.RestClient
-	logger *zap.Logger
-	config *configuration.TwilioConfiguration
+	client  *twilio.RestClient
+	logger  *zap.Logger
+	config  *configuration.TwilioConfiguration
 	latency *prometheus.SummaryVec
 }
 
 /*
  * Constructor
  */
- func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration, latency *prometheus.SummaryVec) *SMSService {
+func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration, latency *prometheus.SummaryVec) *SMSService {
 	return &SMSService{client, logger, config, latency}
 }
 

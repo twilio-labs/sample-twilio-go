@@ -16,7 +16,7 @@ func TestNewSMSService(t *testing.T) {
 
 	// setup zap logger noop
 	logger := zap.NewNop()
-	
+
 	// setup latency prometheus.SummaryVec
 	latency := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{

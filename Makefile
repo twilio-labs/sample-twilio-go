@@ -1,83 +1,57 @@
-# Gareth Paul Jones
+BINARY_NAME=webinar-scale-up-app.out
+# Enables support for tools such as https://github.com/rakyll/gotest
+TEST_COMMAND ?= go test ./...
+# Tags specific for building
+GOTAGS ?=
+# List all our actual files, excluding vendor
+GOPKGS ?= $(shell go list $(FILES) | grep -v /vendor/)
+GOFILES ?= $(shell find . -name '*.go' | grep -v /vendor/)
 
-GOFMT_FILES = $(shell go list -f '{{.Dir}}' ./... | grep -v '/pb')
-HTML_FILES = $(shell find . -name \*.html)
-GO_FILES = $(shell find . -name \*.go)
-MD_FILES = $(shell find . -name \*.md)
+## Build:
+build-app: ## Build your project and put the output binary in out/bin/
+	mkdir -p out/bin
+	go build -o out/bin/$(BINARY_NAME) cmd/app/main.go
 
-# diff-check runs git-diff and fails if there are any changes.
-diff-check:
-	@FINDINGS="$$(git status -s -uall)" ; \
-		if [ -n "$${FINDINGS}" ]; then \
-			echo "Changed files:\n\n" ; \
-			echo "$${FINDINGS}\n\n" ; \
-			echo "Diffs:\n\n" ; \
-			git diff ; \
-			git diff --cached ; \
-			exit 1 ; \
-		fi
-.PHONY: diff-check
+## Run:
+run-app: ## Run your project
+	./out/bin/$(BINARY_NAME)
 
-generate:
-	@go generate ./...
-.PHONY: generate
+## Clean
+clean: ## Remove build related file
+	@rm -fr ./bin
+	@rm -fr ./out
+	@rm -f ./junit-report.xml checkstyle-report.xml ./coverage.xml ./profile.cov yamllint-checkstyle.xml
+.PHONY: clean
 
-generate-check: generate diff-check
-.PHONY: generate-check
+mod-download: ## Downloads the Go module.
+	@echo "==> Downloading Go module"
+	@go mod download
+.PHONY: mod-download
 
-# lint uses the same linter as CI and tries to report the same results running
-# locally. There is a chance that CI detects linter errors that are not found
-# locally, but it should be rare.
-lint:
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	@golangci-lint run --config .golangci.yaml
-.PHONY: lint
+tidy: ## Cleans the Go module.
+	@echo "==> Tidying module"
+	@go mod tidy
+.PHONY: tidy
 
-# protoc generates the protos
-protoc:
-	@go install golang.org/x/tools/cmd/goimports@v0.1.12
-	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-	@go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
-	@protoc --proto_path=. --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. ./internal/pb/*.proto ./internal/pb/federation/*.proto ./internal/pb/export/*.proto
-	@goimports -w internal/pb
-.PHONY: protoc
+fmt: ## Properly formats Go files and orders dependencies.
+	@echo "==> Running gofmt"
+	@gofmt -s -w ${GOFILES}
+.PHONY: fmt
 
-# protoc-check re-generates protos and checks if there's a git diff
-protoc-check: protoc diff-check
-.PHONY: protoc-check
+vet: ## Identifies common errors.
+	@echo "==> Running go vet"
+	@go vet ./...
+.PHONY: vet
 
-tabcheck:
-	@FINDINGS="$$(awk '/\t/ {printf "%s:%s:found tab character\n",FILENAME,FNR}' $(HTML_FILES))" ; \
-		if [ -n "$${FINDINGS}" ]; then \
-			echo "$${FINDINGS}\n\n" ; \
-			exit 1 ; \
-		fi
-.PHONY: tabcheck
-
-test:
-	@go test \
-		-shuffle=on \
-		-count=1 \
-		-short \
-		-timeout=5m \
-		./...
+test: ## Runs the test suite with VCR mocks enabled.
+	@echo "==> Testing ${NAME}"
+	@$(TEST_COMMAND) -timeout=30s -parallel=20 -tags="${GOTAGS}" ${GOPKGS} ${TESTARGS}
 .PHONY: test
 
-test-acc:
-	@go test \
-		-shuffle=on \
-		-count=1 \
-		-race \
-		-timeout=10m \
-		./... \
-		-coverprofile=coverage.out
-.PHONY: test-acc
+test-race: ## Runs the test suite with the -race flag to identify race conditions, if they exist.
+	@echo "==> Testing ${NAME} (race)"
+	@$(TEST_COMMAND) -timeout=60s -race -tags="${GOTAGS}" ${GOPKGS} ${TESTARGS}
+.PHONY: test-race
 
-test-coverage:
-	@go tool cover -func=./coverage.out
-.PHONY: test-coverage
-
-zapcheck:
-	@go install github.com/sethvargo/zapw/cmd/zapw
-	@zapw ./...
-.PHONY: zapcheck
+help: ## Prints this help menu.
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
