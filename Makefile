@@ -1,4 +1,5 @@
-BINARY_NAME=webinar-scale-up-app.out
+NAME=webinar-scale-up-app
+BINARY_NAME={NAME}.out
 # Enables support for tools such as https://github.com/rakyll/gotest
 TEST_COMMAND ?= go test ./...
 # Tags specific for building
@@ -6,6 +7,7 @@ GOTAGS ?=
 # List all our actual files, excluding vendor
 GOPKGS ?= $(shell go list $(FILES) | grep -v /vendor/)
 GOFILES ?= $(shell find . -name '*.go' | grep -v /vendor/)
+GIT_COMMIT ?= $(shell git rev-parse HEAD)
 
 ## dev
 dev: ## Run the app in dev mode
@@ -15,6 +17,14 @@ dev: ## Run the app in dev mode
 build-app: ## Build your project and put the output binary in out/bin/
 	mkdir -p out/bin
 	go build -o out/bin/$(BINARY_NAME) cmd/app/main.go
+
+## Docker-Build:
+docker-build: ## Docker-build and tag the image with the latest git commit hash
+	docker build -t $(NAME):$(GIT_COMMIT) .
+
+## Docker-Run:
+docker-run: ## Run the docker image with the latest git commit hash
+	docker run -p 8080:8080 $(NAME):$(GIT_COMMIT)
 
 ## Run:
 run-app: ## Run your project

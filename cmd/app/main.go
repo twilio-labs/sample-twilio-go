@@ -35,12 +35,23 @@ const (
 	LOG_LEVEL_ENV          = "LOG_LEVEL"
 )
 
+var (
+	// Defines the quantile rank estimates with their respective
+	// absolute error. If Objectives[q] = e, then the value reported for q
+	// will be the φ-quantile value for some φ between q-e and q+e.
+	defaultLatencyObjectives = map[float64]float64{
+		0.5:  0.05,
+		0.9:  0.01,
+		0.99: 0.001,
+	}
+)
+
 var latency = prometheus.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Namespace:  "api",
 		Name:       "latency_seconds",
 		Help:       "Latency distributions.",
-		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		Objectives: defaultLatencyObjectives,
 	},
 	[]string{"method", "path"},
 )
@@ -159,8 +170,7 @@ func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	if err != nil {
 		log.Fatalf("resource.New: %v", err)
 	}
-
-	//
+	
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(res),

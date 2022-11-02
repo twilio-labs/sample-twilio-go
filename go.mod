@@ -4,26 +4,16 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.1
-	github.com/go-playground/assert/v2 v2.0.1
-	github.com/stretchr/testify v1.8.1
-	github.com/twilio/twilio-go v1.0.0-rc.8
+	github.com/go-playground/assert/v2 v2.2.0
+	github.com/stretchr/testify v1.8.0
+	github.com/twilio/twilio-go v1.1.1
 	go.uber.org/zap v1.19.1
 	golang.org/x/text v0.3.7
 )
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/vcs v1.13.3 // indirect
-	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/dep v0.5.4 // indirect
-	github.com/jmank88/nuts v0.4.0 // indirect
-	github.com/nightlyone/lockfile v1.0.0 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
-	golang.org/x/sync v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
