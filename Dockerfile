@@ -14,7 +14,8 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN make build-app
+RUN mkdir -p out/bin
+RUN go build -o out/bin/webinar-scale-up-app.out cmd/app/main.go
 
 # Expose port 8080
 EXPOSE 8080

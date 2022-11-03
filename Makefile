@@ -24,7 +24,12 @@ docker-build: ## Docker-build and tag the image with the latest git commit hash
 
 ## Docker-Run:
 docker-run: ## Run the docker image with the latest git commit hash
-	docker run -p 8080:8080 $(NAME):$(GIT_COMMIT)
+	export IMAGE_TAG=$(GIT_COMMIT); \
+	export IMAGE_NAME=$(NAME); \
+	docker-compose -f services/Docker-compose.yaml up -d
+
+docker-stop:
+	docker-compose -f services/Docker-compose.yaml down
 
 ## Run:
 run-app: ## Run your project
