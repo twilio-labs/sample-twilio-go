@@ -20,7 +20,7 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
   golang:
-    image: ${IMAGE_NAME}:${IMAGE_TAG}
+    image: docker.io/library/${BUILD_IMAGE}
     build:
       context: ./
       dockerfile: Dockerfile
