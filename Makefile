@@ -22,6 +22,10 @@ build-app: ## Build your project and put the output binary in out/bin/
 docker-build: ## Docker-build and tag the image with the latest git commit hash
 	docker build --platform linux/amd64 -t $(NAME):$(GIT_COMMIT) .
 
+# Dodcker-Stop
+docker-stop:
+	docker-compose -f services/Docker-compose.yaml down
+
 ## Docker-Compose the Service:
 # export BUILD_IMAGE=$(NAME):$(GIT_COMMIT) && 
 docker-compose: ## Docker-compose the service with the latest git commit hash
