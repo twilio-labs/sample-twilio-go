@@ -16,6 +16,9 @@ Before installing and running this application, please ensure that you complete 
 - Save your Twilio account SID and Auth Token in the following environment variables:
     - TWILIO_ACCOUNT_SID
     - TWILIO_AUTH_TOKEN
+    - TWILIO_PHONE_NUMBER
+    - LOG_LEVEL
+    - BASE_URL
 - Have [twilio-cli](https://www.twilio.com/docs/twilio-cli/quickstart) installed and logged into your account to easily update your twilio phone number configuration with a single CLI command
 - Obtain access to the [Twilio Console](https://console.twilio.com/)
 - Install/obtain a localhost tunnel to access your localhost server on the internet. We'll use [ngrok](https://ngrok.com/) in our examples.
