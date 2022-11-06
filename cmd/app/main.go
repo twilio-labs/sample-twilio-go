@@ -134,6 +134,7 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
 	})
+	r.POST("/signup", reviewCtr.CreateNewCustomer)
 	r.POST("/sms", reviewCtr.HandleSMS)
 	r.POST("/call-event", reviewCtr.HandleCallEvent)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))

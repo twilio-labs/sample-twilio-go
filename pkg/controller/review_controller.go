@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/db"
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/sms"
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/voice"
 	"github.com/gin-gonic/gin"
@@ -148,6 +150,36 @@ func (ctr *ReviewController) HandleCallEvent(c *gin.Context) {
 	ctr.smsSvc.SendThankYou(receiverPhone)
 	c.AbortWithStatus(http.StatusOK)
 }
+
+
+/* Create New User Customers Controller
+ * @param c *gin.Context
+ * @return
+ */
+func (ctr *ReviewController) CreateNewCustomer(c *gin.Context) {
+	// Parse JSON Post Body for configuration.Customers
+	var customer configuration.Customer
+	if err := c.ShouldBindJSON(&customer); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	// Create New Customer in Database
+	// get context
+	ctx := c.Request.Context()
+
+	// Add Customer to Database
+	db.CreateNewCustomer(ctx, &customer)
+
+
+	// Return JSON Response
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "Customer Created Successfully",
+		"data":    customer,
+	})
+}
+
 
 func (ctr *ReviewController) isValidRequest(c *gin.Context) bool {
 	// Validate request with Twilio SDK request validator
