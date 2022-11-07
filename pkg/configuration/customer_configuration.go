@@ -1,6 +1,6 @@
 package configuration
 
-import "github.com/segmentio/ksuid"
+import ksuid "github.com/segmentio/ksuid"
 
 type Customer struct {
 	PhoneNumber string
