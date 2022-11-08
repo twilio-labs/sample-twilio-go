@@ -112,30 +112,30 @@ For Twilio Go SDK documentation, examples, and code snippets, please refer to th
 
 Areas of interest in the code base that serve as examples for using the Twilio SDK and troubleshooting errors.
 
-- Initializing the Twilio SDK client. A pointer to this client instance is then saved in each application's service `client` field for later use (i.e. [SMSService.client](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L27))
+- Initializing the Twilio SDK client. A pointer to this client instance is then saved in each application's service `client` field for later use (i.e. [SMSService.client](https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L29))
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L44
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/cmd/app/main.go#L104
 
 - Sending an SMS message with the SDK
     
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L102
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L102
 
 - Initiating a voice call with the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/voice/voice_service.go#L38
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/voice/voice_service.go#L38
 
 - Generating TwiML using the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/message/message.go#L48
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/message/message.go#L48
 
-- Initializing the SDK Request Validator. A pointer to this request validator instance is then saved in the application controller `reqValidator` field for later use (i.e. [ReviewController.reqValidator](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L35))
+- Initializing the SDK Request Validator. A pointer to this request validator instance is then saved in the application controller `reqValidator` field for later use (i.e. [ReviewController.reqValidator](https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/controller/review_controller.go#L35))
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L64
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/cmd/app/main.go#L124
 
 - Using the Request Validator to validate requests are coming from Twilio
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L153
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/controller/review_controller.go#L153
 
 - Debugging errors returned in an API response while using the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L117
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L117

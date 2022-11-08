@@ -1,4 +1,4 @@
-module code.hq.twilio.com/twilio/review-rewards-example-app
+module github.com/twilio-labs/sample-twilio-go
 
 go 1.19
 

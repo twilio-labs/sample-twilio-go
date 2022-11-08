@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/sms"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/voice"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
+	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilioClient "github.com/twilio/twilio-go/client"
 )
 
