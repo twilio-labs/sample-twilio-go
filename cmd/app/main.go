@@ -8,13 +8,13 @@ import (
 	"os"
 	"time"
 
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/controller"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/sms"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/voice"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
+	"github.com/twilio-labs/sample-twilio-go/pkg/controller"
+	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
+	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilio "github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
 

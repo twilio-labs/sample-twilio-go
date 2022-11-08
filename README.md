@@ -1,4 +1,4 @@
-# Review Rewards Example App (Twilio Go SDK)
+# Sample Twilio-Go App (Twilio Go SDK)
 
 An example application made by the Developer Experience - Developer Interfaces team to showcase the usage of the [Twilio Go SDK](https://github.com/twilio/twilio-go), [Programmable Messaging](https://www.twilio.com/docs/sms), and [Programmable Voice](https://www.twilio.com/docs/voice).
 

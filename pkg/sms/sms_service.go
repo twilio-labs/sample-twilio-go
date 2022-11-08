@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
+	"github.com/twilio-labs/sample-twilio-go/pkg/message"
 	"github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
 	twilioAPI "github.com/twilio/twilio-go/rest/api/v2010"

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/sms"
-	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/voice"
 	"github.com/gin-gonic/gin"
+	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
+	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	client "github.com/twilio/twilio-go/client"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
