@@ -1,4 +1,4 @@
-NAME=webinar-scale-up-app
+NAME=sample-twilio-go
 BINARY_NAME=${NAME}.out
 # Enables support for tools such as https://github.com/rakyll/gotest
 TEST_COMMAND ?= go test ./...
