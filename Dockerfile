@@ -16,6 +16,9 @@ RUN go mod download
 
 COPY . .
 
+# App environment variables specific to running from this Docker image
+ENV TEMPLATE_DIR=/app/pkg/template ASSET_DIR=/app/asset
+
 # Build the application
 RUN mkdir -p out/bin
 RUN go build -o out/bin/sample-twilio-go.out cmd/app/main.go
