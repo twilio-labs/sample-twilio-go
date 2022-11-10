@@ -1,9 +1,15 @@
 package sms
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"sync"
 	"time"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
 	"github.com/twilio-labs/sample-twilio-go/pkg/message"
@@ -13,9 +19,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// Path: pkg/sms/sms_service.go
+type PublishContent struct {
+	ToNumber   string `json:"to"`
+	Message    string `json:"message"`
+}
+
 /*
  * Service for handling SMS communication
- */
+*/
 type SMSService struct {
 	client  *twilio.RestClient
 	logger  *zap.Logger
@@ -135,7 +147,42 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 		latency := time.Since(start).Seconds()
 		svc.logger.Debug("Twilio SMS message latency", zap.Float64("latency", latency))
 		svc.latency.WithLabelValues("TWILIO", "SMS").Observe(latency)
-
+				// Send to Pub/Sub
+				var wg sync.WaitGroup
+				projectId := os.Getenv("PROJECT_ID")
+				topic := os.Getenv("TOPIC")
+		
+				client, err := pubsub.NewClient(context.Background(), projectId)
+				if err != nil {
+					log.Fatalf("Failed to create client: %v", err)
+				}
+				defer client.Close()
+		
+				t := client.Topic(topic)
+				// setup json with message content
+				msg := PublishContent{
+					ToNumber: to,
+					Message: body,
+				}
+		
+				msgJson, _ := json.Marshal(msg)
+				result := t.Publish(context.Background(), &pubsub.Message{
+					Data: msgJson,
+				})
+		
+				wg.Add(1)
+		
+				go func(res *pubsub.PublishResult) {
+					defer wg.Done()
+		
+					_, err := res.Get(context.Background())
+					if err != nil {
+						fmt.Fprintf(os.Stdout, "Failed to publish: %v", err)
+						return
+					}
+				}(result)
+				
+				wg.Wait()
 	}
 	return nil
 }
