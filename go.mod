@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/stretchr/testify v1.8.0
-	github.com/twilio/twilio-go v1.1.1
+	github.com/twilio/twilio-go v1.2.0
 	go.uber.org/zap v1.19.1
 	golang.org/x/text v0.3.7
 )
