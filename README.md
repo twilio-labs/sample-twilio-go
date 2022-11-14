@@ -103,6 +103,21 @@ The application uses [Zap](https://github.com/uber-go/zap) for structured, level
 |panic|Panic level logs|
 |fatal|Fatal level logs (highest level logs)|
 
+## Application Metrics
+
+When running the application and accompanying services via Docker Compose, the application is feeding metrics to [Prometheus](https://prometheus.io/), a monitoring and time series database, which can be visualized with the accompanying instance of [Grafana](https://grafana.com/), a time-series visualization web application.
+
+To access the Grafana web application, navigate your web browser to http://localhost:3000. The login username/password are `admin/failwhale`.
+
+To connect Prometheus as a data source to Grafana, use the Host URL `http://host.docker.internal:9090`.
+
+To connect PostgreSQL as a data source to Grafana, use the following connection details:
+- Host: host.docker.internal:5432
+- Database: postgres
+- User: postgres
+- Password: postgres
+- TLS/SSL Mode: disabled
+
 ## Getting help
 
 For any questions or assistance regarding this application or the Twilio Go SDK, please feel free to reach out to us at our [#help-dev-interfaces](https://twilio.slack.com/archives/CGQPL0RPH) Slack channel.
