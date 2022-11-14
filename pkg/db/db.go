@@ -132,7 +132,7 @@ func (db *DB) GetCustomers(ctx context.Context) ([]*configuration.Customer, erro
 	customers := []*configuration.Customer{}
 	for rows.Next() {
 		customer := &configuration.Customer{}
-		err := rows.Scan(&customer.ID, &customer.FirstName, &customer.LastName, &customer.Email, &customer.CreatedAt)
+		err := rows.Scan(&customer.ID, &customer.FirstName, &customer.LastName, &customer.PhoneNumber, &customer.Email, &customer.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +144,7 @@ func (db *DB) GetCustomers(ctx context.Context) ([]*configuration.Customer, erro
 // GetCustomerByPhoneNumber returns a customer by phone number
 func (db *DB) GetCustomerByPhoneNumber(ctx context.Context, phoneNumber string) (*configuration.Customer, error) {
 	customer := &configuration.Customer{}
-	err := db.QueryRowContext(ctx, "SELECT * FROM customers WHERE phone_number = $1", phoneNumber).Scan(&customer.ID, &customer.FirstName, &customer.LastName, &customer.Email, &customer.PhoneNumber, &customer.CreatedAt)
+	err := db.QueryRowContext(ctx, "SELECT * FROM customers WHERE phone_number = $1", phoneNumber).Scan(&customer.ID, &customer.FirstName, &customer.LastName, &customer.PhoneNumber, &customer.Email, &customer.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

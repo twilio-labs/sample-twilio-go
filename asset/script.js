@@ -83,17 +83,17 @@ function displaySuccessText() {
     document.getElementById('text-submit-success').classList.remove('invisible')
 }
 
-function getFormJSON() {
+function getFormData() {
     var firstName = document.getElementById('firstName').value
     var lastName = document.getElementById('lastName').value
     var phoneNumber = document.getElementById('phoneNumber').value
     var email = document.getElementById('email').value
-    return JSON.stringify({
+    return {
         firstName: firstName,
         lastName: lastName,
         phoneNumber: phoneNumber,
         email: email
-    })
+    }
 }
 
 function clearForm() {
@@ -112,14 +112,17 @@ function submit(done) {
         if (xhr.readyState === 4 && xhr.status === 200) {
             // Print received data from server
             console.log(this.responseText)
-            done()
+            if (typeof done === 'function') {
+                done()
+            }
         }
     };
 
-    var data = getFormJSON()
+    var data = getFormData()
+    data.phoneNumber = `+1${data.phoneNumber}`
  
     // Sending data with the request
-    xhr.send(data);
+    xhr.send(JSON.stringify(data));
 }
 
 function startCampaign(done) {
@@ -131,7 +134,9 @@ function startCampaign(done) {
         if (xhr.readyState === 4 && xhr.status === 200) {
             // Print received data from server
             console.log(this.responseText)
-            done()
+            if (typeof done === 'function') {
+                done()
+            }
         }
     };
 
