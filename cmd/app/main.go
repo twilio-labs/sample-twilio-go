@@ -141,6 +141,7 @@ func main() {
 	// Initialize application controller(s)
 	reviewCtr := controller.NewReviewController(smsSvc, voiceSvc, &reqValidator, config.BaseURL)
 	registerCtr := controller.NewRegisterController(ctx, db)
+	controlPanelCtr := controller.NewControlPanelController()
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -167,6 +168,12 @@ func main() {
 	})
 	r.GET("/register", registerCtr.GET)
 	r.POST("/register", registerCtr.POST)
+	r.GET("/campaigns-control-panel", controlPanelCtr.GET)
+	r.POST("/campaign-start", func(c *gin.Context) {
+		// TODO: Start SMS Review Campaign
+		// i.e. reviewCtr.StartReviewCampaign
+		fmt.Println("Start SMS Review Campaign here.")
+	})
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
 }
@@ -208,7 +215,7 @@ func initTemplates(r *gin.Engine, templateDir string) {
 }
 
 func initAssets(r *gin.Engine, assetDir string) {
-	r.Static("/assets", assetDir)
+	r.Static("/asset", assetDir)
 }
 
 func initializeLogger(logLevel string) (*zap.Logger, error) {

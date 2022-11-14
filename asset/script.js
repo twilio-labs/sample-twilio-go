@@ -1,18 +1,40 @@
 console.log('Hello World!')
 
-document.getElementById('form-submit-btn').addEventListener('click', function(e) {
-    e.preventDefault()
-    if (isValidInputs()) {
-        console.log('Submit!')
-        submit(function() {
-            clearForm()
-            displaySuccessText()
-        })
-    } else {
-        alert('Invalid Input')
-    }
-})
+switch(window.location.pathname) {
+    case '/register':
+        initRegisterPage()
+        break
+    case '/campaigns-control-panel':
+        initCampaignsControlPanel()
+        break
+}
 
+// Controllers
+function initRegisterPage() {
+    console.log('Initializing Registration Page.')
+    document.getElementById('form-submit-btn').addEventListener('click', function(e) {
+        e.preventDefault()
+        if (isValidInputs()) {
+            console.log('Submit!')
+            submit(function() {
+                clearForm()
+                displaySuccessText()
+            })
+        } else {
+            alert('Invalid Input')
+        }
+    })
+}
+
+function initCampaignsControlPanel() {
+    console.log('Initializing Campaigns Control Panel Page.')
+    document.getElementById('start-campaign-btn').addEventListener('click', function(e) {
+        startCampaign()
+        displaySuccessText()
+    })
+}
+
+// Utility functions
 function isValidInputs() {
     if (isValidFirstName() &&
         isValidLastName() &&
@@ -98,4 +120,20 @@ function submit(done) {
  
     // Sending data with the request
     xhr.send(data);
+}
+
+function startCampaign(done) {
+    let xhr = new XMLHttpRequest()
+    xhr.open("POST", "/campaign-start", true)
+
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            // Print received data from server
+            console.log(this.responseText)
+            done()
+        }
+    };
+
+    xhr.send("");
 }
