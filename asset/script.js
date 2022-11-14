@@ -6,6 +6,7 @@ document.getElementById('form-submit-btn').addEventListener('click', function(e)
         console.log('Submit!')
         submit(function() {
             clearForm()
+            displaySuccessText()
         })
     } else {
         alert('Invalid Input')
@@ -54,6 +55,10 @@ function isValidPhone() {
         return true
     }
     return false
+}
+
+function displaySuccessText() {
+    document.getElementById('text-submit-success').classList.remove('invisible')
 }
 
 function getFormJSON() {

@@ -18,6 +18,10 @@ build-app: ## Build your project and put the output binary in out/bin/
 	mkdir -p out/bin
 	go build -o out/bin/$(BINARY_NAME) cmd/app/main.go
 
+## Build stylesheets:
+build-styles:
+	npx tailwindcss -i ./pkg/input.css -o ./asset/style.css
+
 ## Docker-Build:
 docker-build: ## Docker-build and tag the image with the latest git commit hash
 	docker build --platform linux/amd64 -t $(NAME):$(GIT_COMMIT) .
