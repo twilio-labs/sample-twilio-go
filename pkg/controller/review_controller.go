@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/twilio-labs/sample-twilio-go/pkg/db"
+	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
 	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
 	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	client "github.com/twilio/twilio-go/client"
@@ -23,19 +24,26 @@ const (
  * Controller for review related request resources
  */
 type ReviewController struct {
-	ctx          context.Context
-	db           *db.DB
-	smsSvc       *sms.SMSService
-	voiceSvc     *voice.VoiceService
-	reqValidator *client.RequestValidator
-	baseURL      string
+	ctx           context.Context
+	db            *db.DB
+	smsSvc        *sms.SMSService
+	voiceSvc      *voice.VoiceService
+	reqValidator  *client.RequestValidator
+	baseURL       string
+	inviteMetrics *metric.InviteMetrics
 }
 
 /*
  * Constructor
  */
-func NewReviewController(ctx context.Context, db *db.DB, smsSvc *sms.SMSService, voiceSvc *voice.VoiceService, reqValidator *client.RequestValidator, baseURL string) *ReviewController {
-	return &ReviewController{ctx, db, smsSvc, voiceSvc, reqValidator, baseURL}
+func NewReviewController(ctx context.Context,
+	db *db.DB,
+	smsSvc *sms.SMSService,
+	voiceSvc *voice.VoiceService,
+	reqValidator *client.RequestValidator,
+	baseURL string,
+	inviteMetrics *metric.InviteMetrics) *ReviewController {
+	return &ReviewController{ctx, db, smsSvc, voiceSvc, reqValidator, baseURL, inviteMetrics}
 }
 
 func (ctr *ReviewController) StartReviewCampaign(c *gin.Context) {
@@ -53,6 +61,7 @@ func (ctr *ReviewController) StartReviewCampaign(c *gin.Context) {
 			c := customers[i]
 			// This should probably handle the error in a multi-threaded way too
 			_ = ctr.sendGreetingAndInvite(c.FirstName, c.PhoneNumber)
+			ctr.inviteMetrics.Sent.Inc()
 		}(i)
 	}
 	wg.Wait()
@@ -79,6 +88,7 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 
 	if strings.ToLower(incomingBody) == "yes" {
 		// Participation invite accepted. Query for participant name.
+		ctr.inviteMetrics.Accepted.Inc()
 		err := ctr.sendInviteComfirmation(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -93,6 +103,7 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 		return
 	} else if strings.ToLower(incomingBody) == "no" {
 		// Participation invite declined.
+		ctr.inviteMetrics.Declined.Inc()
 		err := ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)

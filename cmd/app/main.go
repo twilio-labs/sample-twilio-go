@@ -14,6 +14,7 @@ import (
 	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
 	"github.com/twilio-labs/sample-twilio-go/pkg/controller"
 	"github.com/twilio-labs/sample-twilio-go/pkg/db"
+	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
 	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
 	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilio "github.com/twilio/twilio-go"
@@ -49,6 +50,7 @@ var (
 	}
 )
 
+// Prometheus metrics
 var latency = prometheus.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Namespace:  "api",
@@ -57,6 +59,27 @@ var latency = prometheus.NewSummaryVec(
 		Objectives: defaultLatencyObjectives,
 	},
 	[]string{"method", "path"},
+)
+var invitesSentCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_sent",
+		Help:      "Review invites sent.",
+	},
+)
+var invitesAcceptedCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_accepted",
+		Help:      "Review invites accepted.",
+	},
+)
+var invitesDeclinedCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_declined",
+		Help:      "Review invites declined.",
+	},
 )
 
 var tracer = otel.GetTracerProvider().Tracer("twilio-go-at-scale")
@@ -74,6 +97,9 @@ func prometheusGinMiddleware(c *gin.Context) {
 
 func init() {
 	prometheus.MustRegister(latency)
+	prometheus.MustRegister(invitesSentCounter)
+	prometheus.MustRegister(invitesAcceptedCounter)
+	prometheus.MustRegister(invitesDeclinedCounter)
 }
 
 func main() {
@@ -134,12 +160,18 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to initialize the database connection. Error: ", err)
 	}
+
+	// Initialize Metrics
+	inviteMetrics := metric.NewInviteMetrics(invitesSentCounter,
+		invitesAcceptedCounter,
+		invitesDeclinedCounter)
+
 	smsSvc := sms.NewSMSService(client, logger, config, latency)
 	voiceSvc := voice.NewVoiceService(client, logger, config)
 	reqValidator := twilioClient.NewRequestValidator(authToken)
 
 	// Initialize application controller(s)
-	reviewCtr := controller.NewReviewController(ctx, db, smsSvc, voiceSvc, &reqValidator, config.BaseURL)
+	reviewCtr := controller.NewReviewController(ctx, db, smsSvc, voiceSvc, &reqValidator, config.BaseURL, inviteMetrics)
 	registerCtr := controller.NewRegisterController(ctx, db)
 	controlPanelCtr := controller.NewControlPanelController()
 

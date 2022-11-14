@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/twilio-labs/sample-twilio-go/pkg/db"
+	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
 	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
 	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilioClient "github.com/twilio/twilio-go/client"
@@ -20,9 +21,10 @@ func TestNewReviewController(t *testing.T) {
 	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
+	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost")
+	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
 
 	// Assert
 	assert.NotNil(t, ctr)
@@ -46,9 +48,10 @@ func TestReviewController_HandleSMS(t *testing.T) {
 	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
+	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost")
+	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
 
 	testGinCtx := GetTestGinContext()
 
@@ -65,9 +68,10 @@ func TestReviewController_HandleCallHandler(t *testing.T) {
 	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
+	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost")
+	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
 
 	testCtx := GetTestGinContext()
 
@@ -85,9 +89,10 @@ func TestReviewController_isValidRequest(t *testing.T) {
 	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
+	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost")
+	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
 
 	testCtx := GetTestGinContext()
 
