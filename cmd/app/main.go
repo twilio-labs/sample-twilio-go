@@ -139,7 +139,7 @@ func main() {
 	reqValidator := twilioClient.NewRequestValidator(authToken)
 
 	// Initialize application controller(s)
-	reviewCtr := controller.NewReviewController(smsSvc, voiceSvc, &reqValidator, config.BaseURL)
+	reviewCtr := controller.NewReviewController(ctx, db, smsSvc, voiceSvc, &reqValidator, config.BaseURL)
 	registerCtr := controller.NewRegisterController(ctx, db)
 	controlPanelCtr := controller.NewControlPanelController()
 
@@ -169,11 +169,7 @@ func main() {
 	r.GET("/register", registerCtr.GET)
 	r.POST("/register", registerCtr.POST)
 	r.GET("/campaigns-control-panel", controlPanelCtr.GET)
-	r.POST("/campaign-start", func(c *gin.Context) {
-		// TODO: Start SMS Review Campaign
-		// i.e. reviewCtr.StartReviewCampaign
-		fmt.Println("Start SMS Review Campaign here.")
-	})
+	r.POST("/campaign-start", reviewCtr.StartReviewCampaign)
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
 }

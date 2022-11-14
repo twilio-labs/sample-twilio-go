@@ -30,10 +30,11 @@ func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *config
 	return &SMSService{client, logger, config, latency}
 }
 
-func (svc *SMSService) SendGreeting(to string) error {
+func (svc *SMSService) SendGreeting(name, to string) error {
+	msg := message.GetGreeting(name)
 	return svc.sendMessage(to,
 		svc.config.AccountPhoneNumber,
-		message.GREETING,
+		msg,
 		"[SendGreeting] Failed to send greeting")
 }
 
@@ -56,28 +57,6 @@ func (svc *SMSService) SendInviteFallback(to string) error {
 		svc.config.AccountPhoneNumber,
 		message.PARTICIPATION_INVITE_FALLBACK,
 		"[SendInviteFallback] Failed to send invite fallback")
-}
-
-func (svc *SMSService) SendAskForName(to string) error {
-	return svc.sendMessage(to,
-		svc.config.AccountPhoneNumber,
-		message.ASK_FOR_NAME,
-		"[SendAskForName] Failed to send name query")
-}
-
-func (svc *SMSService) SendAskForNameFallback(to string) error {
-	return svc.sendMessage(to,
-		svc.config.AccountPhoneNumber,
-		message.ASK_FOR_NAME,
-		"[SendAskForNameFallback] Failed to send name query fallback")
-}
-
-func (svc *SMSService) SendNamedGreeting(to, name string) error {
-	body := message.GetHelloMessage(name)
-	return svc.sendMessage(to,
-		svc.config.AccountPhoneNumber,
-		body,
-		"[SendNamedGreeting] Failed to send named greeting")
 }
 
 func (svc *SMSService) SendCallNotification(to string) error {

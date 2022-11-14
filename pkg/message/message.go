@@ -8,10 +8,6 @@ import (
 
 const (
 	// Static messages
-	GREETING = "Hello from Twilio Resorts and Spas. Thank you for" +
-		" reaching out to our review rewards program, where you can leave a" +
-		" review over the phone and receive $50 Twilbucks off your next stay!"
-
 	PARTICIPATION_INVITE = "Would you like to leave a review today?" +
 		" (yes/no)"
 	PARTICIPATION_ACCEPT_RESPONSE = "Thank you for choosing to participate." +
@@ -21,8 +17,6 @@ const (
 		" out to us in the future if you wish to participate."
 	PARTICIPATION_INVITE_FALLBACK = "Sorry, I did not understand that. Please" +
 		` say "yes" or "no".`
-
-	ASK_FOR_NAME = `Please enter your name.`
 
 	CALL_NOTIFICATION = `You will receive a call shortly to leave your review.`
 
@@ -37,11 +31,13 @@ recent stay! You may leave a review up to 1 minute long. Please leave your
 review after the beep.`
 
 	// Templates
-	GREETING_WITH_NAME_TEMPLATE = `Hello, %s!`
+	GREETING = "Hello again, %s. Thank you for reaching out to the Twilio" +
+		" Resorts and Spas Review Rewards Program, where you can leave a" +
+		" review over the phone and receive $50 Twilbucks off your next stay!"
 )
 
-func GetHelloMessage(name string) string {
-	return fmt.Sprintf(GREETING_WITH_NAME_TEMPLATE, name)
+func GetGreeting(name string) string {
+	return fmt.Sprintf(GREETING, name)
 }
 
 func GetReviewGreetingAndInstructionsTwiML() (string, error) {
