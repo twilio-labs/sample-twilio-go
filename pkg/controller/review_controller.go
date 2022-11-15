@@ -1,38 +1,76 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/twilio-labs/sample-twilio-go/pkg/db"
+	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
 	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
 	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	client "github.com/twilio/twilio-go/client"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
 	COOKIE_TTL              = 14400 // 4 hours in seconds. The TTL for Twilio SMS cookies
-	WAIT_SECONDS_UNTIL_CALL = 5
+	WAIT_SECONDS_UNTIL_CALL = 8
 )
 
 /*
  * Controller for review related request resources
  */
 type ReviewController struct {
-	smsSvc       *sms.SMSService
-	voiceSvc     *voice.VoiceService
-	reqValidator *client.RequestValidator
-	baseURL      string
+	ctx           context.Context
+	db            *db.DB
+	smsSvc        *sms.SMSService
+	voiceSvc      *voice.VoiceService
+	reqValidator  *client.RequestValidator
+	baseURL       string
+	inviteMetrics *metric.InviteMetrics
 }
 
 /*
  * Constructor
  */
-func NewReviewController(smsSvc *sms.SMSService, voiceSvc *voice.VoiceService, reqValidator *client.RequestValidator, baseURL string) *ReviewController {
-	return &ReviewController{smsSvc, voiceSvc, reqValidator, baseURL}
+func NewReviewController(ctx context.Context,
+	db *db.DB,
+	smsSvc *sms.SMSService,
+	voiceSvc *voice.VoiceService,
+	reqValidator *client.RequestValidator,
+	baseURL string,
+	inviteMetrics *metric.InviteMetrics) *ReviewController {
+	return &ReviewController{ctx, db, smsSvc, voiceSvc, reqValidator, baseURL, inviteMetrics}
+}
+
+func (ctr *ReviewController) StartReviewCampaign(c *gin.Context) {
+	customers, err := ctr.db.GetCustomers(ctr.ctx)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(customers))
+	for i := 0; i < len(customers); i++ {
+		go func(i int) {
+			defer wg.Done()
+			c := customers[i]
+			// This should probably handle the error in a multi-threaded way too
+			_ = ctr.sendGreetingAndInvite(c.FirstName, c.PhoneNumber)
+			ctr.inviteMetrics.Sent.Inc()
+		}(i)
+	}
+	wg.Wait()
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Success",
+		"invites": len(customers),
+	})
 }
 
 func (ctr *ReviewController) HandleSMS(c *gin.Context) {
@@ -42,84 +80,31 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 		return
 	}
 
-	// Parse request cookies for SMS conversation context
-	greeted, err := c.Cookie("greeted")
-	if err != nil {
-		greeted = "false"
-		c.SetCookie("greeted", "false", COOKIE_TTL, "/sms", "localhost", false, false)
-	}
-	participant, err := c.Cookie("participant")
-	if err != nil {
-		participant = ""
-		c.SetCookie("participant", "", COOKIE_TTL, "/sms", "localhost", false, false)
-	}
-
 	// Parse request POST form body
 	incomingPhoneNumber := c.PostForm("From")
 	incomingBody := strings.TrimSpace(c.PostForm("Body"))
 
-	if greeted == "false" {
-		// Send greeting and participation invite
-		err = ctr.sendGreetingAndInvite(incomingPhoneNumber)
+	// Should probably check if the "From" number is a registered customer
+
+	if strings.ToLower(incomingBody) == "yes" {
+		// Participation invite accepted. Query for participant name.
+		ctr.inviteMetrics.Accepted.Inc()
+		err := ctr.sendInviteComfirmation(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		c.SetCookie("greeted", "true", COOKIE_TTL, "/sms", "localhost", false, false)
-		c.AbortWithStatus(http.StatusOK)
-		return
-	}
-
-	if participant == "false" {
-		// Participation invite declined
-		resetContext(c)
-		err = ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
+		err = ctr.sendCallNotificationAndInitiateCall(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		c.AbortWithStatus(http.StatusOK)
 		return
-	}
-
-	if participant == "" {
-		if strings.ToLower(incomingBody) == "yes" {
-			// Participation invite accepted. Query for participant name.
-			c.SetCookie("participant", "true", COOKIE_TTL, "/sms", "localhost", false, false)
-			err = ctr.sendInviteComfirmationAndAskForName(incomingPhoneNumber)
-			if err != nil {
-				c.AbortWithError(http.StatusInternalServerError, err)
-				return
-			}
-			c.AbortWithStatus(http.StatusOK)
-			return
-		} else if strings.ToLower(incomingBody) == "no" {
-			// Participation invite declined.
-			resetContext(c)
-			err = ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
-			if err != nil {
-				c.AbortWithError(http.StatusInternalServerError, err)
-				return
-			}
-			c.AbortWithStatus(http.StatusOK)
-			return
-		} else {
-			// Unknown input. Send fallback message.
-			err = ctr.smsSvc.SendInviteFallback(incomingPhoneNumber)
-			if err != nil {
-				c.AbortWithError(http.StatusInternalServerError, err)
-				return
-			}
-			c.AbortWithStatus(http.StatusOK)
-			return
-		}
-	}
-
-	if participant == "true" && len(incomingBody) > 0 {
-		// Invite acccepted
-		resetContext(c)
-		caser := cases.Title(language.AmericanEnglish)
-		err := ctr.sendNamedGreetingAndInitiateCall(caser.String(incomingBody), incomingPhoneNumber)
+	} else if strings.ToLower(incomingBody) == "no" {
+		// Participation invite declined.
+		ctr.inviteMetrics.Declined.Inc()
+		err := ctr.smsSvc.SendGoodbye(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -127,13 +112,14 @@ func (ctr *ReviewController) HandleSMS(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 		return
 	} else {
-		// Send name query fallback message
-		err = ctr.smsSvc.SendAskForNameFallback(incomingPhoneNumber)
+		// Unknown input. Send fallback message.
+		err := ctr.smsSvc.SendInviteFallback(incomingPhoneNumber)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		c.AbortWithStatus(http.StatusOK)
+		return
 	}
 }
 
@@ -164,8 +150,8 @@ func (ctr *ReviewController) isValidRequest(c *gin.Context) bool {
 	return false
 }
 
-func (ctr *ReviewController) sendGreetingAndInvite(to string) error {
-	if err := ctr.smsSvc.SendGreeting(to); err != nil {
+func (ctr *ReviewController) sendGreetingAndInvite(name, to string) error {
+	if err := ctr.smsSvc.SendGreeting(name, to); err != nil {
 		return err
 	}
 	if err := ctr.smsSvc.SendInvite(to); err != nil {
@@ -174,20 +160,14 @@ func (ctr *ReviewController) sendGreetingAndInvite(to string) error {
 	return nil
 }
 
-func (ctr *ReviewController) sendInviteComfirmationAndAskForName(to string) error {
+func (ctr *ReviewController) sendInviteComfirmation(to string) error {
 	if err := ctr.smsSvc.SendAcceptConfirmation(to); err != nil {
-		return err
-	}
-	if err := ctr.smsSvc.SendAskForName(to); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ctr *ReviewController) sendNamedGreetingAndInitiateCall(name, to string) error {
-	if err := ctr.smsSvc.SendNamedGreeting(to, name); err != nil {
-		return err
-	}
+func (ctr *ReviewController) sendCallNotificationAndInitiateCall(to string) error {
 	if err := ctr.smsSvc.SendCallNotification(to); err != nil {
 		return err
 	}
@@ -196,10 +176,4 @@ func (ctr *ReviewController) sendNamedGreetingAndInitiateCall(name, to string) e
 		return err
 	}
 	return nil
-}
-
-func resetContext(c *gin.Context) {
-	c.SetCookie("participant", "", COOKIE_TTL, "/sms", "localhost", false, false)
-	c.SetCookie("greeted", "false", COOKIE_TTL, "/sms", "localhost", false, false)
-	c.SetCookie("identity", "", COOKIE_TTL, "/sms", "localhost", false, false)
 }

@@ -13,6 +13,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
 	"github.com/twilio-labs/sample-twilio-go/pkg/controller"
+	"github.com/twilio-labs/sample-twilio-go/pkg/db"
+	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
 	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
 	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilio "github.com/twilio/twilio-go"
@@ -33,6 +35,8 @@ const (
 	PHONE_NUMBER_ENV       = "TWILIO_PHONE_NUMBER"
 	BASE_URL_ENV           = "BASE_URL"
 	LOG_LEVEL_ENV          = "LOG_LEVEL"
+	TEMPLATE_DIR_ENV       = "TEMPLATE_DIR"
+	ASSET_DIR_ENV          = "ASSET_DIR"
 )
 
 var (
@@ -46,6 +50,7 @@ var (
 	}
 )
 
+// Prometheus metrics
 var latency = prometheus.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Namespace:  "api",
@@ -54,6 +59,27 @@ var latency = prometheus.NewSummaryVec(
 		Objectives: defaultLatencyObjectives,
 	},
 	[]string{"method", "path"},
+)
+var invitesSentCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_sent",
+		Help:      "Review invites sent.",
+	},
+)
+var invitesAcceptedCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_accepted",
+		Help:      "Review invites accepted.",
+	},
+)
+var invitesDeclinedCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Namespace: "api",
+		Name:      "invites_declined",
+		Help:      "Review invites declined.",
+	},
 )
 
 var tracer = otel.GetTracerProvider().Tracer("twilio-go-at-scale")
@@ -71,6 +97,9 @@ func prometheusGinMiddleware(c *gin.Context) {
 
 func init() {
 	prometheus.MustRegister(latency)
+	prometheus.MustRegister(invitesSentCounter)
+	prometheus.MustRegister(invitesAcceptedCounter)
+	prometheus.MustRegister(invitesDeclinedCounter)
 }
 
 func main() {
@@ -87,9 +116,17 @@ func main() {
 	}()
 
 	// Process CLI and env args
+	templateDir := os.Getenv(TEMPLATE_DIR_ENV)
+	assetDir := os.Getenv(ASSET_DIR_ENV)
 	from := os.Getenv(PHONE_NUMBER_ENV)
 	baseUrl := os.Getenv(BASE_URL_ENV)
 	logLevel := os.Getenv(LOG_LEVEL_ENV)
+	if len(templateDir) == 0 {
+		templateDir = "../../pkg/template"
+	}
+	if len(assetDir) == 0 {
+		assetDir = "../../asset"
+	}
 	if from == "" {
 		log.Fatal("Missing required from phone number arg.")
 	}
@@ -119,16 +156,32 @@ func main() {
 		log.Fatal("Failed to initialize logger. Error: ", err)
 	}
 	defer logger.Sync() // flushes buffer, if any
+	db, err := db.InitializeDB()
+	if err != nil {
+		log.Fatal("Failed to initialize the database connection. Error: ", err)
+	}
+
+	// Initialize Metrics
+	inviteMetrics := metric.NewInviteMetrics(invitesSentCounter,
+		invitesAcceptedCounter,
+		invitesDeclinedCounter)
+
 	smsSvc := sms.NewSMSService(client, logger, config, latency)
 	voiceSvc := voice.NewVoiceService(client, logger, config)
 	reqValidator := twilioClient.NewRequestValidator(authToken)
 
 	// Initialize application controller(s)
-	reviewCtr := controller.NewReviewController(smsSvc, voiceSvc, &reqValidator, config.BaseURL)
+	reviewCtr := controller.NewReviewController(ctx, db, smsSvc, voiceSvc, &reqValidator, config.BaseURL, inviteMetrics)
+	registerCtr := controller.NewRegisterController(ctx, db)
+	controlPanelCtr := controller.NewControlPanelController()
 
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(prometheusGinMiddleware)
+
+	// Initialize HTML templates, static assets
+	initTemplates(r, templateDir)
+	initAssets(r, assetDir)
 
 	// Request routing
 	r.GET("/ping", func(c *gin.Context) {
@@ -145,6 +198,10 @@ func main() {
 		}
 		c.String(http.StatusOK, "Total Calls: %d", len(logs))
 	})
+	r.GET("/register", registerCtr.GET)
+	r.POST("/register", registerCtr.POST)
+	r.GET("/campaigns-control-panel", controlPanelCtr.GET)
+	r.POST("/campaign-start", reviewCtr.StartReviewCampaign)
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
 }
@@ -170,7 +227,7 @@ func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	if err != nil {
 		log.Fatalf("resource.New: %v", err)
 	}
-	
+
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(res),
@@ -179,6 +236,14 @@ func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	defer tp.ForceFlush(ctx) // flushes any pending spans
 	otel.SetTracerProvider(tp)
 	return tp, nil
+}
+
+func initTemplates(r *gin.Engine, templateDir string) {
+	r.LoadHTMLGlob(templateDir + "/*.html")
+}
+
+func initAssets(r *gin.Engine, assetDir string) {
+	r.Static("/asset", assetDir)
 }
 
 func initializeLogger(logLevel string) (*zap.Logger, error) {

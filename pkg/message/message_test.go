@@ -7,18 +7,6 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-// test GetHelloMessage
-func TestGetHelloMessage(t *testing.T) {
-	// Arrange
-	name := "John"
-
-	// Act
-	result := GetHelloMessage(name)
-
-	// Assert
-	assert.Equal(t, "Hello, John!", result)
-}
-
 func TestGetReviewGreetingAndInstructionsTwiML(t *testing.T) {
 	// Act
 	result, error := GetReviewGreetingAndInstructionsTwiML()
