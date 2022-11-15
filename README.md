@@ -2,7 +2,7 @@
 
 An example application made by the Developer Experience - Developer Interfaces team to showcase the usage of the [Twilio Go SDK](https://github.com/twilio/twilio-go), [Programmable Messaging](https://www.twilio.com/docs/sms), and [Programmable Voice](https://www.twilio.com/docs/voice).
 
-Made for the purpose of providing an example application to train individuals on how Golang and the Twilio Go SDK may be used to build a web application.
+Made for the purpose of providing an example application to train individuals on how Golang and the Twilio Go SDK may be used to build a messaging application.
 
 ## Prerequisites
 
@@ -70,7 +70,13 @@ https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io/sms
 
 Next, click the `Save` button below in the Console to apply your Twilio messaging webhook URL.
 
-After configuring your SMS webhook, start the application and its service dependencies with the following command (make sure that you run `make docker-build` first!):
+After starting an ngrok HTTP tunnel and updating your Twilio phone number's SMS webhook, you'll want to set the `BASE_URL` environment variable to your ngrok forwarding URL. On Mac/Linux, that would look something like this:
+
+```
+export BASE_URL=https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io
+```
+
+Now you're ready to start the application and its service dependencies with the following command (make sure that you run `make docker-build` first!):
 
 ```
 make docker-compose
@@ -92,7 +98,7 @@ To view the total number of completed calls made by your application (and phone 
 
 ## Further Configuration
 
-The application uses [Zap](https://github.com/uber-go/zap) for structured, leveled logging. To configure the application's log level, set the `-loglevel` CLI option flag when starting the app to one of the following values (i.e. `-loglevel=debug`)
+The application uses [Zap](https://github.com/uber-go/zap) for structured, leveled logging. To configure the application's log level, set the `LOG_LEVEL` environment variable before starting the app to one of the following values:
 
 |Value|Description|
 |---|---|
