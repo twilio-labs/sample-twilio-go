@@ -4,9 +4,6 @@ FROM golang:1.19.0
 WORKDIR /app
 
 RUN export GO111MODULE=on
-RUN export CGO_ENABLED=0
-RUN export GOOS=linux
-RUN export GOARCH=arm64
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./

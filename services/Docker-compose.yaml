@@ -20,7 +20,7 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
   golang:
-    image: docker.io/library/${BUILD_IMAGE}
+    image: docker.io/library/webinar-scaling-up-v1.0.3 
     build:
       context: ./
       dockerfile: Dockerfile

@@ -1,5 +1,5 @@
 NAME=webinar-scale-up-app
-BINARY_NAME=${NAME}.out
+BINARY_NAME={NAME}.out
 # Enables support for tools such as https://github.com/rakyll/gotest
 TEST_COMMAND ?= go test ./...
 # Tags specific for building
@@ -20,27 +20,15 @@ build-app: ## Build your project and put the output binary in out/bin/
 
 ## Docker-Build:
 docker-build: ## Docker-build and tag the image with the latest git commit hash
-	docker build --platform linux/amd64 -t $(NAME):$(GIT_COMMIT) .
-
-# Dodcker-Stop
-docker-stop:
-	docker-compose -f services/Docker-compose.yaml down
-
-## Docker-Compose the Service:
-# export BUILD_IMAGE=$(NAME):$(GIT_COMMIT) && 
-docker-compose: ## Docker-compose the service with the latest git commit hash
-	export BUILD_IMAGE=$(NAME):$(GIT_COMMIT) && cd services && docker-compose up -d && cd ..
+	docker build -t $(NAME):$(GIT_COMMIT) .
 
 ## Docker-Run:
-# get environment variables from .env file
-# run docker-run with the environment variables
-# warn if .env file is not present
-docker-run: ## Docker-run the service with an environment variable for the git commit hash
-	@if [ -f .env ]; then \
-		docker run --env-file .env -p 8080:8080 $(NAME):$(GIT_COMMIT); \
-	else \
-		echo "WARNING: .env file not found. Please create one with environment variables."; \
-	fi
+docker-run: ## Run the docker image with the latest git commit hash
+	docker run -p 8080:8080 $(NAME):$(GIT_COMMIT)
+
+## Run:
+run-app: ## Run your project
+	./out/bin/$(BINARY_NAME)
 
 ## Clean
 clean: ## Remove build related file
