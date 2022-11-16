@@ -14,11 +14,10 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN mkdir -p out/bin
-RUN go build -o out/bin/webinar-scale-up-app.out cmd/app/main.go
+RUN go build -o main .
 
-# Expose port 8080
-EXPOSE 8080
+# Expose port 9000 to the outside world
+EXPOSE 9000
 
 # Command to run the executable
-CMD ["./out/bin/webinar-scale-up-app.out"]
+CMD ["./main"]

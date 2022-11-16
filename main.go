@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,12 +16,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	twilio "github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -35,38 +28,20 @@ const (
 	LOG_LEVEL_ENV          = "LOG_LEVEL"
 )
 
-var (
-	// Defines the quantile rank estimates with their respective
-	// absolute error. If Objectives[q] = e, then the value reported for q
-	// will be the φ-quantile value for some φ between q-e and q+e.
-	defaultLatencyObjectives = map[float64]float64{
-		0.5:  0.05,
-		0.9:  0.01,
-		0.99: 0.001,
-	}
-)
-
 var latency = prometheus.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Namespace:  "api",
 		Name:       "latency_seconds",
 		Help:       "Latency distributions.",
-		Objectives: defaultLatencyObjectives,
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},
 	[]string{"method", "path"},
 )
-
-var tracer = otel.GetTracerProvider().Tracer("twilio-go-at-scale")
 
 func prometheusGinMiddleware(c *gin.Context) {
 	start := time.Now()
 	c.Next()
 	latency.WithLabelValues(c.Request.Method, c.Request.URL.Path).Observe(time.Since(start).Seconds())
-
-	// tracer
-	ctx, span := tracer.Start(c.Request.Context(), "prometheusGinMiddleware")
-	defer span.End()
-	c.Request = c.Request.WithContext(ctx)
 }
 
 func init() {
@@ -74,18 +49,6 @@ func init() {
 }
 
 func main() {
-	// Setup Tracer
-	ctx := context.Background()
-	tp, err := initTracer(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			log.Printf("Error shutting down tracer provider: %v", err)
-		}
-	}()
-
 	// Process CLI and env args
 	from := os.Getenv(PHONE_NUMBER_ENV)
 	baseUrl := os.Getenv(BASE_URL_ENV)
@@ -131,9 +94,6 @@ func main() {
 	r.Use(prometheusGinMiddleware)
 
 	// Request routing
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
 	r.POST("/sms", reviewCtr.HandleSMS)
 	r.POST("/call-event", reviewCtr.HandleCallEvent)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -147,38 +107,6 @@ func main() {
 	})
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 	r.Run()
-}
-
-func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
-	// export traces to Zap logger
-	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-	if err != nil {
-		return nil, err
-	}
-
-	// Identify your application using resource detection
-	res, err := resource.New(ctx,
-		// Use the GCP resource detector to detect information about the GCP platform
-		//resource.WithDetectors(gcp.NewDetector()),
-		// Keep the default detectors
-		resource.WithTelemetrySDK(),
-		// Add your own custom attributes to identify your application
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String("my-application"),
-		),
-	)
-	if err != nil {
-		log.Fatalf("resource.New: %v", err)
-	}
-	
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(res),
-	)
-
-	defer tp.ForceFlush(ctx) // flushes any pending spans
-	otel.SetTracerProvider(tp)
-	return tp, nil
 }
 
 func initializeLogger(logLevel string) (*zap.Logger, error) {
