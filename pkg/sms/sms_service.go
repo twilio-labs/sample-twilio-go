@@ -2,11 +2,9 @@ package sms
 
 import (
 	"fmt"
-	"time"
 
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
 	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
 	twilioAPI "github.com/twilio/twilio-go/rest/api/v2010"
@@ -20,14 +18,13 @@ type SMSService struct {
 	client *twilio.RestClient
 	logger *zap.Logger
 	config *configuration.TwilioConfiguration
-	latency *prometheus.SummaryVec
 }
 
 /*
  * Constructor
  */
- func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration, latency *prometheus.SummaryVec) *SMSService {
-	return &SMSService{client, logger, config, latency}
+func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration) *SMSService {
+	return &SMSService{client, logger, config}
 }
 
 func (svc *SMSService) SendGreeting(to string) error {
@@ -107,9 +104,6 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 	params.SetFrom(from)
 	params.SetBody(body)
 
-	// measure the latency of the request
-	start := time.Now()
-
 	// Logging the request parameters sent to the SDK client
 	svc.logger.Debug("SMS message parameters",
 		zap.String("To", *params.To),
@@ -129,13 +123,6 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 			zap.Any("details", twilioError.Details))
 
 		return fmt.Errorf("%s. Error: %w", errMsg, err)
-	} else {
-		// Logging the response from Twilio Messaging
-		svc.logger.Debug("SMS message sent successfully")
-		latency := time.Since(start).Seconds()
-		svc.logger.Debug("Twilio SMS message latency", zap.Float64("latency", latency))
-		svc.latency.WithLabelValues("TWILIO", "SMS").Observe(latency)
-
 	}
 	return nil
 }
