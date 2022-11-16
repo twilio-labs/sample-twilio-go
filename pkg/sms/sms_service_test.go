@@ -3,8 +3,8 @@ package sms
 import (
 	"testing"
 
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
 	"github.com/twilio/twilio-go"
 	"go.uber.org/zap"
 )

@@ -3,7 +3,7 @@ package voice
 import (
 	"testing"
 
-	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
 	"github.com/twilio/twilio-go"
 	"go.uber.org/zap"
 )

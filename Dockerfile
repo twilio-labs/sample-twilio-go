@@ -16,15 +16,12 @@ RUN go mod download
 
 COPY . .
 
-# App environment variables specific to running from this Docker image
-ENV TEMPLATE_DIR=/app/pkg/template ASSET_DIR=/app/asset
-
 # Build the application
 RUN mkdir -p out/bin
-RUN go build -o out/bin/sample-twilio-go.out cmd/app/main.go
+RUN go build -o out/bin/webinar-scale-up-app.out cmd/app/main.go
 
 # Expose port 8080
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./out/bin/sample-twilio-go.out"]
+CMD ["./out/bin/webinar-scale-up-app.out"]

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/configuration"
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/message"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
-	"github.com/twilio-labs/sample-twilio-go/pkg/message"
 	"github.com/twilio/twilio-go"
 	twilioClient "github.com/twilio/twilio-go/client"
 	twilioAPI "github.com/twilio/twilio-go/rest/api/v2010"
@@ -30,11 +30,10 @@ func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *config
 	return &SMSService{client, logger, config, latency}
 }
 
-func (svc *SMSService) SendGreeting(name, to string) error {
-	msg := message.GetGreeting(name)
+func (svc *SMSService) SendGreeting(to string) error {
 	return svc.sendMessage(to,
 		svc.config.AccountPhoneNumber,
-		msg,
+		message.GREETING,
 		"[SendGreeting] Failed to send greeting")
 }
 
@@ -57,6 +56,28 @@ func (svc *SMSService) SendInviteFallback(to string) error {
 		svc.config.AccountPhoneNumber,
 		message.PARTICIPATION_INVITE_FALLBACK,
 		"[SendInviteFallback] Failed to send invite fallback")
+}
+
+func (svc *SMSService) SendAskForName(to string) error {
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		message.ASK_FOR_NAME,
+		"[SendAskForName] Failed to send name query")
+}
+
+func (svc *SMSService) SendAskForNameFallback(to string) error {
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		message.ASK_FOR_NAME,
+		"[SendAskForNameFallback] Failed to send name query fallback")
+}
+
+func (svc *SMSService) SendNamedGreeting(to, name string) error {
+	body := message.GetHelloMessage(name)
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		body,
+		"[SendNamedGreeting] Failed to send named greeting")
 }
 
 func (svc *SMSService) SendCallNotification(to string) error {

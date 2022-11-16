@@ -1,4 +1,4 @@
-NAME=sample-twilio-go
+NAME=webinar-scale-up-app
 BINARY_NAME=${NAME}.out
 # Enables support for tools such as https://github.com/rakyll/gotest
 TEST_COMMAND ?= go test ./...
@@ -17,10 +17,6 @@ dev: ## Run the app in dev mode
 build-app: ## Build your project and put the output binary in out/bin/
 	mkdir -p out/bin
 	go build -o out/bin/$(BINARY_NAME) cmd/app/main.go
-
-## Build stylesheets:
-build-styles:
-	npx tailwindcss -i ./pkg/input.css -o ./asset/style.css
 
 ## Docker-Build:
 docker-build: ## Docker-build and tag the image with the latest git commit hash

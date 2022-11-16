@@ -1,30 +1,24 @@
 package controller
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/sms"
+	"code.hq.twilio.com/twilio/review-rewards-example-app/pkg/voice"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/twilio-labs/sample-twilio-go/pkg/db"
-	"github.com/twilio-labs/sample-twilio-go/pkg/metric"
-	"github.com/twilio-labs/sample-twilio-go/pkg/sms"
-	"github.com/twilio-labs/sample-twilio-go/pkg/voice"
 	twilioClient "github.com/twilio/twilio-go/client"
 )
 
 func TestNewReviewController(t *testing.T) {
 	// Arrange
-	ctx := context.Background()
-	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
-	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
+	ctr := NewReviewController(sms, voice, clientRequestValidator, "http://localhost")
 
 	// Assert
 	assert.NotNil(t, ctr)
@@ -44,61 +38,63 @@ func GetTestGinContext() *gin.Context {
 
 func TestReviewController_HandleSMS(t *testing.T) {
 	// Arrange
-	ctx := context.Background()
-	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
-	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
+	ctr := NewReviewController(sms, voice, clientRequestValidator, "http://localhost")
 
-	testGinCtx := GetTestGinContext()
+	ctx := GetTestGinContext()
 
 	// Act
-	ctr.HandleSMS(testGinCtx)
+	ctr.HandleSMS(ctx)
 
 	// Assert
-	assert.Equal(t, 403, testGinCtx.Writer.Status())
+	assert.Equal(t, 403, ctx.Writer.Status())
 }
 
 func TestReviewController_HandleCallHandler(t *testing.T) {
 	// Arrange
-	ctx := context.Background()
-	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
-	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
+	ctr := NewReviewController(sms, voice, clientRequestValidator, "http://localhost")
 
-	testCtx := GetTestGinContext()
+	ctx := GetTestGinContext()
 
 	// Act
-	ctr.HandleCallEvent(testCtx)
+	ctr.HandleCallEvent(ctx)
 
 	// Assert
-	assert.Equal(t, 403, testCtx.Writer.Status())
+	assert.Equal(t, 403, ctx.Writer.Status())
 }
 
 // check isValidRequest
 func TestReviewController_isValidRequest(t *testing.T) {
 	// Arrange
-	ctx := context.Background()
-	db, _ := db.InitializeDB()
 	sms := &sms.SMSService{}
 	voice := &voice.VoiceService{}
-	metrics := &metric.InviteMetrics{}
 
 	clientRequestValidator := &twilioClient.RequestValidator{}
-	ctr := NewReviewController(ctx, db, sms, voice, clientRequestValidator, "http://localhost", metrics)
+	ctr := NewReviewController(sms, voice, clientRequestValidator, "http://localhost")
 
-	testCtx := GetTestGinContext()
+	ctx := GetTestGinContext()
 
 	// Act
-	ctr.isValidRequest(testCtx)
+	ctr.isValidRequest(ctx)
 
 	// Assert
-	assert.Equal(t, 200, testCtx.Writer.Status())
+	assert.Equal(t, 200, ctx.Writer.Status())
+}
+
+// test resetContext
+func TestReviewController_resetContext(t *testing.T) {
+	ctx := GetTestGinContext()
+
+	// Act
+	resetContext(ctx)
+
+	// Assert
+	assert.Equal(t, 200, ctx.Writer.Status())
 }

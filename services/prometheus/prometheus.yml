@@ -5,9 +5,10 @@ global:
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['0.0.0.0:8080']
   - job_name: golang 
     metrics_path: /metrics
     static_configs:
       - targets:
-        - host.docker.internal:8080
+        - 0.0.0.0:8080
+        # GCloud Run - webinar-vfm2ipcttq-uw.a.run.app
