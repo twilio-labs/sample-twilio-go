@@ -6,7 +6,7 @@
 *.dylib
 
 # Program binary output
-review-rewards-example-app
+out/
 
 # Test binary, built with `go test -c`
 *.test

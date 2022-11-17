@@ -22,7 +22,7 @@ Before installing and running this application, please ensure that you complete 
 
 ## Build the application
 
-To build the application, run `go build`
+To build the application, run `go build -o out/bin/sample-twilio-go main.go`. This compiles the "sample-twilio-go" application binary and stores it in the `out/bin` directory.
 
 ## Run the application
 
@@ -64,21 +64,21 @@ https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io/sms
 
 Next, click the `Save` button below in the Console to apply your Twilio messaging webhook URL.
 
-After configuring your SMS webhook, start the application with the following command, replacing `<phone_number>` with your Twilio phone number in E.164 format and `<forwarding_url>` with your ngrok forwarding URL:
+After configuring your SMS webhook, start the application with the following commands, replacing `<phone_number>` with your Twilio phone number in E.164 format and `<forwarding_url>` with your ngrok forwarding URL:
 
 ```
-./review-rewards-example-app -from=<phone_number> -url=<forwarding_url>
+./out/bin/sample-twilio-go -from=<phone_number> -url=<forwarding_url>
 ```
 
 Your command should look something like this:
 
 ```
-./review-rewards-example-app -from=+15555555555 -url=https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io
+./out/bin/sample-twilio-go -from=+15555555555 -url=https://1404-2601-282-1200-118-e1d0-ba12-d474-d43a.ngrok.io
 ```
 
 ## Interacting with the application
 
-To initiate the review process, send an SMS message to your phone number.
+To initiate the review process, send an SMS message to your Twilio phone number.
 
 After leaving a review, you may playback your review recording in the Twilio Console [Call recordings tab](https://console.twilio.com/us1/monitor/logs/call-recordings?frameUrl=%2Fconsole%2Fvoice%2Frecordings%2Frecording-logs%3Fx-target-region%3Dus1) by clicking the play icon for each call recording.
 
@@ -109,30 +109,30 @@ For Twilio Go SDK documentation, examples, and code snippets, please refer to th
 
 Areas of interest in the code base that serve as examples for using the Twilio SDK and troubleshooting errors.
 
-- Initializing the Twilio SDK client. A pointer to this client instance is then saved in each application's service `client` field for later use (i.e. [SMSService.client](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L27))
+- Initializing the Twilio SDK client. A pointer to this client instance is then saved in each application's service `client` field for later use (i.e. [SMSService.client](https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L27))
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L44
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/main.go#L44
 
 - Sending an SMS message with the SDK
     
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L102
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L102
 
 - Initiating a voice call with the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/voice/voice_service.go#L38
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/voice/voice_service.go#L38
 
 - Generating TwiML using the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/message/message.go#L48
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/message/message.go#L48
 
-- Initializing the SDK Request Validator. A pointer to this request validator instance is then saved in the application controller `reqValidator` field for later use (i.e. [ReviewController.reqValidator](https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L35))
+- Initializing the SDK Request Validator. A pointer to this request validator instance is then saved in the application controller `reqValidator` field for later use (i.e. [ReviewController.reqValidator](https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/controller/review_controller.go#L35))
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/main.go#L64
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/main.go#L64
 
 - Using the Request Validator to validate requests are coming from Twilio
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/controller/review_controller.go#L153
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/controller/review_controller.go#L153
 
 - Debugging errors returned in an API response while using the SDK
 
-    https://code.hq.twilio.com/twilio/go-review-rewards-example-app/blob/main/pkg/sms/sms_service.go#L117
+    https://github.com/twilio-labs/sample-twilio-go/blob/main/pkg/sms/sms_service.go#L117

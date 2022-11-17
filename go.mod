@@ -1,10 +1,10 @@
-module code.hq.twilio.com/twilio/review-rewards-example-app
+module github.com/twilio-labs/sample-twilio-go
 
 go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.1
-	github.com/twilio/twilio-go v1.0.0-rc.8
+	github.com/twilio/twilio-go v1.2.1
 	go.uber.org/zap v1.19.1
 	golang.org/x/text v0.3.7
 )
