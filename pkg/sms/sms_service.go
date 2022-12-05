@@ -2,9 +2,7 @@ package sms
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/twilio-labs/sample-twilio-go/pkg/configuration"
 	"github.com/twilio-labs/sample-twilio-go/pkg/message"
 	"github.com/twilio/twilio-go"
@@ -17,24 +15,22 @@ import (
  * Service for handling SMS communication
  */
 type SMSService struct {
-	client  *twilio.RestClient
-	logger  *zap.Logger
-	config  *configuration.TwilioConfiguration
-	latency *prometheus.SummaryVec
+	client *twilio.RestClient
+	logger *zap.Logger
+	config *configuration.TwilioConfiguration
 }
 
 /*
  * Constructor
  */
-func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration, latency *prometheus.SummaryVec) *SMSService {
-	return &SMSService{client, logger, config, latency}
+func NewSMSService(client *twilio.RestClient, logger *zap.Logger, config *configuration.TwilioConfiguration) *SMSService {
+	return &SMSService{client, logger, config}
 }
 
-func (svc *SMSService) SendGreeting(name, to string) error {
-	msg := message.GetGreeting(name)
+func (svc *SMSService) SendGreeting(to string) error {
 	return svc.sendMessage(to,
 		svc.config.AccountPhoneNumber,
-		msg,
+		message.GREETING,
 		"[SendGreeting] Failed to send greeting")
 }
 
@@ -57,6 +53,28 @@ func (svc *SMSService) SendInviteFallback(to string) error {
 		svc.config.AccountPhoneNumber,
 		message.PARTICIPATION_INVITE_FALLBACK,
 		"[SendInviteFallback] Failed to send invite fallback")
+}
+
+func (svc *SMSService) SendAskForName(to string) error {
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		message.ASK_FOR_NAME,
+		"[SendAskForName] Failed to send name query")
+}
+
+func (svc *SMSService) SendAskForNameFallback(to string) error {
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		message.ASK_FOR_NAME,
+		"[SendAskForNameFallback] Failed to send name query fallback")
+}
+
+func (svc *SMSService) SendNamedGreeting(to, name string) error {
+	body := message.GetHelloMessage(name)
+	return svc.sendMessage(to,
+		svc.config.AccountPhoneNumber,
+		body,
+		"[SendNamedGreeting] Failed to send named greeting")
 }
 
 func (svc *SMSService) SendCallNotification(to string) error {
@@ -86,9 +104,6 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 	params.SetFrom(from)
 	params.SetBody(body)
 
-	// measure the latency of the request
-	start := time.Now()
-
 	// Logging the request parameters sent to the SDK client
 	svc.logger.Debug("SMS message parameters",
 		zap.String("To", *params.To),
@@ -108,13 +123,6 @@ func (svc *SMSService) sendMessage(to, from, body, errMsg string) error {
 			zap.Any("details", twilioError.Details))
 
 		return fmt.Errorf("%s. Error: %w", errMsg, err)
-	} else {
-		// Logging the response from Twilio Messaging
-		svc.logger.Debug("SMS message sent successfully")
-		latency := time.Since(start).Seconds()
-		svc.logger.Debug("Twilio SMS message latency", zap.Float64("latency", latency))
-		svc.latency.WithLabelValues("TWILIO", "SMS").Observe(latency)
-
 	}
 	return nil
 }
